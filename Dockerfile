@@ -1,11 +1,13 @@
-FROM ubuntu:latest AS build
-RUN apt-get update
-RUN apt-get install openjdk-21-jdk -y
-COPY . .
-RUN ./mvnw spring-boot:run --no-daemon
+# Etapa de construcción
+FROM maven:3.9.4-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-FROM openjdk:21-jdk-slim
+# Etapa de ejecución
+FROM eclipse-temurin:21-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/Hola-Mundo-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-COPY --from=build /target/Hola-Mundo-0.0.1-SNAPSHOT.jar app.jar
-
 ENTRYPOINT ["java", "-jar", "app.jar"]
